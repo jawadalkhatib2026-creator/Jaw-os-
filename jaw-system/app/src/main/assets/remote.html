@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B1026"><title>Jaw Remote</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,Roboto,"Segoe UI",sans-serif;background:linear-gradient(160deg,#0B1026,#1B2A5C);color:#fff;min-height:100vh}
+.wrap{max-width:440px;margin:0 auto;padding:20px 18px 40px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.logo{width:40px;height:40px;border-radius:11px;background:#3B5BDB;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px}
+h1{font-size:20px;margin:0}h1 small{display:block;font-weight:400;opacity:.65;font-size:12px}
+.card{background:#ffffff14;border:1px solid #ffffff26;border-radius:20px;padding:18px;margin-bottom:16px}
+input{width:100%;padding:14px;border-radius:12px;border:0;font-size:17px;margin-bottom:10px}
+button{font:inherit;color:#fff;border:0;cursor:pointer}
+.primary{width:100%;padding:15px;border-radius:14px;background:#3B5BDB;font-size:17px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:280px;margin:0 auto}
+.k{height:70px;border-radius:18px;background:#ffffff20;font-size:24px}
+.k:active,.s:active{background:#ffffff55;transform:scale(.96)}
+.ok{background:#3B5BDB}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.s{height:52px;border-radius:14px;background:#ffffff20;font-size:15px}
+.apps{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.a{padding:14px;border-radius:14px;background:#ffffff20;font-size:15px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#msg{min-height:20px;font-size:13px;opacity:.85;text-align:center;margin-top:10px}
+img{width:100%;border-radius:14px;display:block;background:#000;min-height:60px}
+.hide{display:none}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:13px;opacity:.8;margin-bottom:10px}
+.top button{background:none}
+</style></head><body><div class="wrap">
+<header><div class="logo">J</div><h1 id="name">Jaw TV<small>Jaw Remote &middot; &#1585;&#1610;&#1605;&#1608;&#1578; &#1580;&#1608;</small></h1></header>
+<div id="login" class="card">
+ <p>Sign in with your Jaw account<br>&#1587;&#1580;&#1617;&#1604; &#1575;&#1604;&#1583;&#1582;&#1608;&#1604; &#1576;&#1581;&#1587;&#1575;&#1576; &#1580;&#1608;</p>
+ <input id="e" type="email" placeholder="Email / &#1575;&#1604;&#1576;&#1585;&#1610;&#1583;" autocomplete="username">
+ <input id="p" type="password" placeholder="Password / &#1603;&#1604;&#1605;&#1577; &#1575;&#1604;&#1605;&#1585;&#1608;&#1585;" autocomplete="current-password">
+ <button class="primary" onclick="login()">Sign in / &#1583;&#1582;&#1608;&#1604;</button>
+</div>
+<div id="remote" class="hide">
+ <div class="top"><span id="who"></span><button onclick="logout()">Sign out / &#1582;&#1585;&#1608;&#1580;</button></div>
+ <div class="card">
+  <div class="pad">
+   <span></span><button class="k" onclick="key('up')">&#9650;</button><span></span>
+   <button class="k" onclick="key('left')">&#9664;</button><button class="k ok" onclick="key('ok')">OK</button><button class="k" onclick="key('right')">&#9654;</button>
+   <span></span><button class="k" onclick="key('down')">&#9660;</button><span></span>
+  </div>
+  <div class="row">
+   <button class="s" onclick="key('back')">Back</button><button class="s" onclick="key('home')">Home</button><button class="s" onclick="key('mute')">Mute</button>
+   <button class="s" onclick="key('vol_down')">Vol &minus;</button><button class="s" onclick="key('vol_up')">Vol +</button><button class="s" onclick="key('play')">Play/Pause</button>
+   <button class="s" onclick="key('prev')">&#9198; Prev</button><button class="s" onclick="key('next')">Next &#9197;</button><button class="s" onclick="toggleScreen()">Screen</button>
+  </div>
+  <div id="msg"></div>
+ </div>
+ <div id="scr" class="card hide"><img id="img" alt=""><div id="smsg" style="font-size:13px;opacity:.75;margin-top:8px"></div></div>
+ <div class="card"><b>Apps / &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;&#1575;&#1578;</b><div class="apps" id="apps"></div></div>
+</div>
+</div>
+<script>
+var T=localStorage.getItem('jt')||'',timer=null;
+function $(i){return document.getElementById(i)}
+function msg(t){$('msg').textContent=t||''}
+fetch('/api/info').then(function(r){return r.json()}).then(function(j){$('name').firstChild.nodeValue=j.name;document.title=j.name+' · Jaw Remote'}).catch(function(){});
+function show(){$('login').classList.toggle('hide',!!T);$('remote').classList.toggle('hide',!T);if(T)loadApps();}
+function login(){
+ fetch('/api/login',{method:'POST',body:'email='+encodeURIComponent($('e').value)+'&pass='+encodeURIComponent($('p').value)})
+ .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})})
+ .then(function(x){if(x.ok){T=x.j.token;localStorage.setItem('jt',T);$('who').textContent=x.j.email;show();}else{alert(x.j.error||'Failed')}})
+ .catch(function(){alert('Cannot reach the TV. Are you on the same Wi-Fi?')});
+}
+function logout(){T='';localStorage.removeItem('jt');stopScreen();show();}
+function api(p,o){o=o||{};o.headers={'X-Token':T};return fetch(p,o).then(function(r){if(r.status==401){logout();throw 0}return r})}
+function key(k){api('/api/key?k='+k,{method:'POST'}).then(function(r){return r.json()}).then(function(j){msg(j.result=='ok'?'':j.result);if(navigator.vibrate)navigator.vibrate(15)}).catch(function(){})}
+function loadApps(){api('/api/apps').then(function(r){return r.json()}).then(function(l){
+ var box=$('apps');box.innerHTML='';
+ l.forEach(function(a){var b=document.createElement('button');b.className='a';b.textContent=a.name;
+  b.onclick=function(){api('/api/launch?pkg='+encodeURIComponent(a.pkg),{method:'POST'}).then(function(r){return r.json()}).then(function(j){msg(j.result=='ok'?'':j.result)})};
+  box.appendChild(b)})}).catch(function(){})}
+function toggleScreen(){if(timer){stopScreen()}else{$('scr').classList.remove('hide');tick();timer=setInterval(tick,500)}}
+function stopScreen(){clearInterval(timer);timer=null;$('scr').classList.add('hide')}
+function tick(){$('img').src='/api/screen?t='+encodeURIComponent(T)+'&_='+Date.now()}
+$('img').onerror=function(){$('smsg').textContent='Screen view is off. Turn it on in Jaw Settings > Remote on the TV.'};
+$('img').onload=function(){$('smsg').textContent=''};
+show();
+</script></body></html>

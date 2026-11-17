@@ -1,0 +1,33 @@
+plugins { id 'com.android.application' }
+
+def vc = (project.findProperty('vc') ?: '1').toString().toInteger()
+
+android {
+    namespace 'dev.jaw'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'dev.jaw.system'
+        minSdk 24
+        targetSdk 34
+        versionCode vc
+        versionName "1." + vc
+    }
+    signingConfigs {
+        release {
+            storeFile file('jaw.keystore')
+            storePassword 'jawsystem'
+            keyAlias 'jaw'
+            keyPassword 'jawsystem'
+        }
+    }
+    buildTypes {
+        debug { signingConfig signingConfigs.release }
+        release { minifyEnabled false; signingConfig signingConfigs.release }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+
+dependencies {
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'androidx.core:core:1.13.1'
+}
